@@ -41,7 +41,8 @@ static int usage(const char *name, const char *version)
             "        -e <exposure>           Set camera exposure time in microseconds\n"
             "        -g <gain>               Set camera gain in dB\n"
             "        -w                      Enable camera automatic white balance\n"
-            "\n", version, name);
+            "        -D <spidev>             SPI device to use (default: %s)\n"
+            "\n", version, name, IAC_SPI_DEFAULT_DEVICE);
 
     return IAC_SUCCESS;
 }
