@@ -39,10 +39,12 @@ static int usage(const char *name, const char *version)
             "\n"
             "Usage: %s [OPTIONS]...\n"
             "Options:\n"
-            "        -e <exposure>           Set camera exposure time in microseconds\n"
-            "        -g <gain>               Set camera gain in dB\n"
-            "        -w                      Enable camera automatic white balance\n"
-            "        -D <spidev>             SPI device to use (default: %s)\n"
+            "  -e, --exposure=EXPOSURE       Set camera exposure time in microseconds\n"
+            "  -g, --gain=GAIN               Set camera gain in dB\n"
+            "  -w                            Enable camera automatic white balance\n"
+            "  -D, --spi-dev=DEVICE          SPI device to use (default: %s)\n"
+            "  --help                        Display help and exit\n"
+            "  --version                     Output version and exit\n"
             "\n", version, name, IAC_SPI_DEFAULT_DEVICE);
 
     return IAC_SUCCESS;
@@ -65,9 +67,36 @@ int main(int argc, char **argv)
     size_t tile_data_size;
 
     /* Parse command line options */
+    static struct option long_options[] = {
+        { "exposure", required_argument, 0 , 'e' },
+        { "gain", required_argument, 0, 'g' },
+        { "auto-wb", no_argument, 0, 'w' },
+        { "spi-device", required_argument, 0, 'D' },
+        { "help", no_argument, 0, 0 },
+        { "version", no_argument, 0, 0 },
+        { 0, 0, 0, 0 }
+    };
+    int long_index = 0;
     memset(&cam_init_params, 0, sizeof(cam_init_params));
-    while ((opt = getopt(argc, argv, "e:g:D:w")) != -1) {
+
+    while ((opt = getopt_long(argc,
+                              argv,
+                              "e:g:D:w",
+                              long_options,
+                              &long_index)) != -1) {
         switch (opt) {
+        case 0:
+            switch (long_index) {
+            case 5:
+                fprintf(stderr,
+                        "Image acquisition controller utility, version %s\n",
+                        IAC_VERSION);
+                return IAC_SUCCESS;
+                break;
+            default:
+                return usage(argv[0], IAC_VERSION);
+            }
+            break;
         case 'e':
             cam_init_params.exposure = atoi(optarg);
             break;
