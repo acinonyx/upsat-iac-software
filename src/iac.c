@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 
     /* Parse command line options */
     memset(&cam_init_params, 0, sizeof(cam_init_params));
-    while ((opt = getopt(argc, argv, "e:g:w")) != -1) {
+    while ((opt = getopt(argc, argv, "e:g:D:w")) != -1) {
         switch (opt) {
         case 'e':
             cam_init_params.exposure = atoi(optarg);
