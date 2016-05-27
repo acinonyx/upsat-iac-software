@@ -41,9 +41,9 @@ typedef struct config_t {
 
 static int usage(const char *, const char *);
 static config_t parse_args(int, char **);
-static HANDLE get_image(XI_IMG *, config_t *);
-static MagickWand ***create_tiles(XI_IMG *, config_t *);
-static int transfer_tiles(MagickWand ***, config_t *);
+static HANDLE get_image(XI_IMG *, const config_t *);
+static MagickWand ***create_tiles(const XI_IMG *, const config_t *);
+static int transfer_tiles(MagickWand ***, const config_t *);
 
 static int usage(const char *name, const char *version)
 {
@@ -120,7 +120,7 @@ static config_t parse_args(int argc, char **argv)
 }
 
 
-static HANDLE get_image(XI_IMG *image, config_t *config)
+static HANDLE get_image(XI_IMG *image, const config_t *config)
 {
     HANDLE handle;
     iac_cam_init_params_t init_params = {
@@ -154,7 +154,7 @@ static HANDLE get_image(XI_IMG *image, config_t *config)
 }
 
 
-static MagickWand ***create_tiles(XI_IMG *image, config_t *config)
+static MagickWand ***create_tiles(const XI_IMG *image, const config_t *config)
 {
     MagickWand *wand;
     MagickWand ***wands;
@@ -176,7 +176,7 @@ static MagickWand ***create_tiles(XI_IMG *image, config_t *config)
 }
 
 
-static int transfer_tiles(MagickWand ***wands, config_t *config)
+static int transfer_tiles(MagickWand ***wands, const config_t *config)
 {
     char *device = IAC_SPI_DEFAULT_DEVICE;
     iac_spi_init_params_t params = {
