@@ -112,5 +112,3 @@ int iac_cam_acquire(const HANDLE *handle, XI_IMG *image)
 
     return IAC_SUCCESS;
 }
-
-

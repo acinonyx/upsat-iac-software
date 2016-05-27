@@ -22,6 +22,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <arpa/inet.h>
+#include <linux/spi/spidev.h>
 #include <m3api/xiApi.h>
 #include <wand/magick_wand.h>
 #include "iac.h"
@@ -31,7 +32,18 @@
 
 #define IAC_VERSION                     "0.1.0"
 
+typedef struct config_t {
+    int exposure;
+    double gain;
+    int auto_wb;
+    char *spi_device;
+} config_t;
+
 static int usage(const char *, const char *);
+static config_t parse_args(int, char **);
+static HANDLE get_image(XI_IMG *, config_t *);
+static MagickWand ***create_tiles(XI_IMG *, config_t *);
+static int transfer_tiles(MagickWand ***, config_t *);
 
 static int usage(const char *name, const char *version)
 {
@@ -50,23 +62,11 @@ static int usage(const char *name, const char *version)
     return IAC_SUCCESS;
 }
 
-int main(int argc, char **argv)
-{
-    HANDLE cam_handle;
-    iac_cam_init_params_t cam_init_params;
-    XI_IMG cam_image;
-    iac_image_read_params_t image_read_params;
-    MagickWand *image_wand;
-    MagickWand ***tile_wands;
-    iac_spi_init_params_t spi_init_params;
-    char *spi_device = IAC_SPI_DEFAULT_DEVICE;
-    int opt;
-    int fd;
-    int i, j;
-    unsigned char *tile_blob;
-    size_t tile_data_size;
 
-    /* Parse command line options */
+static config_t parse_args(int argc, char **argv)
+{
+    int opt;
+    config_t config;
     static struct option long_options[] = {
         { "exposure", required_argument, 0 , 'e' },
         { "gain", required_argument, 0, 'g' },
@@ -76,8 +76,10 @@ int main(int argc, char **argv)
         { "version", no_argument, 0, 0 },
         { 0, 0, 0, 0 }
     };
+
+    /* Parse command line options */
     int long_index = 0;
-    memset(&cam_init_params, 0, sizeof(cam_init_params));
+    memset(&config, 0, sizeof(config));
 
     while ((opt = getopt_long(argc,
                               argv,
@@ -91,85 +93,146 @@ int main(int argc, char **argv)
                 fprintf(stderr,
                         "Image acquisition controller utility, version %s\n",
                         IAC_VERSION);
-                return IAC_SUCCESS;
+                exit(EXIT_SUCCESS);
                 break;
             default:
-                return usage(argv[0], IAC_VERSION);
+                exit(usage(argv[0], IAC_VERSION));
             }
             break;
         case 'e':
-            cam_init_params.exposure = atoi(optarg);
+            config.exposure = atoi(optarg);
             break;
         case 'g':
-            cam_init_params.gain = atof(optarg);
+            config.gain = atof(optarg);
             break;
         case 'w':
-            cam_init_params.auto_wb = 1;
+            config.auto_wb = 1;
             break;
         case 'D':
-            spi_device = optarg;
+            config.spi_device = optarg;
             break;
         default:
-            return usage(argv[0], IAC_VERSION);
+            exit(usage(argv[0], IAC_VERSION));
         }
     }
 
+    return config;
+}
+
+
+static HANDLE get_image(XI_IMG *image, config_t *config)
+{
+    HANDLE handle;
+    iac_cam_init_params_t init_params = {
+        config->exposure,
+        config->gain,
+        config->auto_wb,
+    };
+
     /* Open camera */
-    if (iac_cam_open(&cam_handle) == IAC_FAILURE)
-        return EXIT_FAILURE;
+    if (iac_cam_open(&handle) == IAC_FAILURE)
+        exit(EXIT_FAILURE);
 
     /* Initialize camera */
-    if (iac_cam_init(&cam_handle, &cam_init_params) == IAC_FAILURE) {
+    if (iac_cam_init(&handle, &init_params) == IAC_FAILURE) {
         fprintf(stderr, "Unable to initialize camera!\n");
-        iac_cam_close(&cam_handle);
-        return EXIT_FAILURE;
+        iac_cam_close(&handle);
+        exit(EXIT_FAILURE);
     }
 
     /* Acquire image from camera */
-    memset(&cam_image, 0, sizeof(cam_image));
-    cam_image.size = sizeof(cam_image);
+    memset(image, 0, sizeof(&image));
+    image->size = sizeof(&image);
 
-    if (iac_cam_acquire(&cam_handle, &cam_image) == IAC_FAILURE) {
+    if (iac_cam_acquire(&handle, image) == IAC_FAILURE) {
         fprintf(stderr, "Unable to acquire image!\n");
-        iac_cam_close(&cam_handle);
-        return EXIT_FAILURE;
+        iac_cam_close(&handle);
+        exit(EXIT_FAILURE);
     }
 
+    return handle;
+}
+
+
+static MagickWand ***create_tiles(XI_IMG *image, config_t *config)
+{
+    MagickWand *wand;
+    MagickWand ***wands;
+
+    iac_image_read_params_t params = {
+        image->width,
+        image->height,
+        IAC_IMAGE_FORMAT,
+        IAC_IMAGE_DEPTH,
+    };
+
     /* Read camera image into wand */
-    image_read_params.width = cam_image.width;
-    image_read_params.height = cam_image.height;
-    image_read_params.format = IAC_IMAGE_FORMAT;
-    image_read_params.depth = IAC_IMAGE_DEPTH;
     iac_image_init();
-    image_wand = iac_image_read(&image_read_params,
-                                (const unsigned char *) cam_image.bp,
-                                (const size_t) cam_image.bp_size);
-    tile_wands = iac_image_tiles(image_wand, IAC_IMAGE_DIVS);
+    wand = iac_image_read(&params,
+                                (const unsigned char *) image->bp,
+                                (const size_t) image->bp_size);
+    wands = iac_image_tiles(wand, IAC_IMAGE_DIVS);
+
+    return wands;
+}
+
+
+static int transfer_tiles(MagickWand ***wands, config_t *config)
+{
+    char *device = IAC_SPI_DEFAULT_DEVICE;
+    iac_spi_init_params_t params = {
+        IAC_SPI_MODE,
+        IAC_SPI_BITS,
+        IAC_SPI_MAX_HZ,
+    };
+    int fd;
+    int i, j;
+    size_t size;
+    unsigned char *blob;
 
     /* Initialize SPI */
-    fd = iac_spi_init(spi_device, &spi_init_params);
+    fd = iac_spi_init(device, &params);
     if (fd == -1)
-        return EXIT_FAILURE;
+        return IAC_FAILURE;
 
     /* Write tiles to SPI */
     for (i = 0; i < IAC_IMAGE_DIVS; i++) {
         for (j = 0; j < IAC_IMAGE_DIVS; j++) {
-            tile_blob = iac_image_blob(tile_wands[i][j], &tile_data_size);
-            if (tile_blob == NULL)
-                return EXIT_FAILURE;
-            tile_data_size = htonl((uint32_t) tile_data_size);
-            if (iac_spi_transfer(fd, (uint8_t *) &tile_data_size, sizeof(&tile_data_size)) == IAC_FAILURE)
-                return EXIT_FAILURE;
-            if (iac_spi_transfer(fd, tile_blob, (uint32_t) tile_data_size) == IAC_FAILURE)
-                return EXIT_FAILURE;
+            blob = iac_image_blob(wands[i][j], &size);
+            if (blob == NULL)
+                return IAC_FAILURE;
+            size = htonl((uint32_t) size);
+            if (iac_spi_transfer(fd, (uint8_t *) &size, sizeof(&size)) == IAC_FAILURE)
+                return IAC_FAILURE;
+            if (iac_spi_transfer(fd, blob, (uint32_t) size) == IAC_FAILURE)
+                return IAC_FAILURE;
         }
+    }
+
+    return IAC_SUCCESS;
+}
+
+
+int main(int argc, char **argv)
+{
+    HANDLE handle;
+    XI_IMG image;
+    config_t config;
+    MagickWand ***wands;
+
+    config = parse_args(argc, argv);
+    handle = get_image(&image, &config);
+    wands = create_tiles(&image, &config);
+    if (transfer_tiles(wands, &config) == IAC_FAILURE) {
+        fprintf(stderr, "Failed to transfer tiles!\n");
+        return EXIT_FAILURE;
     }
 
     /* Terminate image */
     iac_image_term();
 
     /* Close camera */
-    if (iac_cam_close(&cam_handle) == IAC_FAILURE) {
+    if (iac_cam_close(&handle) == IAC_FAILURE) {
         fprintf(stderr, "Unable to close camera!\n");
         return EXIT_FAILURE;
     }

@@ -28,6 +28,9 @@
 #define IAC_IMAGE_DEPTH                 8
 #define IAC_IMAGE_DIVS                  2
 #define IAC_IMAGE_BLOB_FORMAT           "JPG"
+#define IAC_SPI_MODE                    SPI_MODE_0
+#define IAC_SPI_BITS                    8
+#define IAC_SPI_MAX_HZ                  500000
 
 /* Default values */
 #define IAC_SPI_DEFAULT_DEVICE          "/dev/spidev1.0"
