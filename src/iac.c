@@ -207,6 +207,7 @@ static int transfer_tiles(MagickWand ***wands, const config_t *config)
                 return IAC_FAILURE;
             if (iac_spi_transfer(fd, blob, (uint32_t) size) == IAC_FAILURE)
                 return IAC_FAILURE;
+            MagickRelinquishMemory(blob);
         }
     }
 
