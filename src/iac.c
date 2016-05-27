@@ -228,6 +228,8 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
+    iac_image_tiles_destroy(wands, IAC_IMAGE_DIVS);
+
     /* Terminate image */
     iac_image_term();
 
