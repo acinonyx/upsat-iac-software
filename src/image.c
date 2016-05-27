@@ -50,7 +50,9 @@ void iac_image_term(void)
 }
 
 
-MagickWand *iac_image_read(const iac_image_read_params_t *params, const unsigned char *data, const size_t data_size)
+MagickWand *iac_image_read(const iac_image_read_params_t *params,
+                           const unsigned char *data,
+                           const size_t data_size)
 {
     MagickWand *wand = NULL;
 

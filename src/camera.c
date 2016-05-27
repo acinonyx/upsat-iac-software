@@ -57,7 +57,9 @@ int iac_cam_init(const HANDLE *handle, const iac_cam_init_params_t *params)
 
     /* Set exposure */
     if (params->exposure) {
-        if (xiSetParamInt(*handle, XI_PRM_EXPOSURE, params->exposure) != XI_OK) {
+        if (xiSetParamInt(*handle,
+                          XI_PRM_EXPOSURE,
+                          params->exposure) != XI_OK) {
             fprintf(stderr, "Unable to set exposure!\n");
             return IAC_FAILURE;
         }
@@ -65,7 +67,9 @@ int iac_cam_init(const HANDLE *handle, const iac_cam_init_params_t *params)
 
     /* Set gain */
     if (params->gain) {
-        if (xiSetParamFloat(*handle, XI_PRM_GAIN, (float) params->gain) != XI_OK) {
+        if (xiSetParamFloat(*handle,
+                            XI_PRM_GAIN,
+                            (float) params->gain) != XI_OK) {
             fprintf(stderr, "Unable to set gain!\n");
             return IAC_FAILURE;
         }
@@ -73,14 +77,18 @@ int iac_cam_init(const HANDLE *handle, const iac_cam_init_params_t *params)
 
     /* Set white balance */
     if (params->auto_wb) {
-        if (xiSetParamInt(*handle, XI_PRM_AUTO_WB, params->auto_wb) != XI_OK) {
+        if (xiSetParamInt(*handle,
+                          XI_PRM_AUTO_WB,
+                          params->auto_wb) != XI_OK) {
             fprintf(stderr, "Unable to set auto white balance!\n");
             return IAC_FAILURE;
         }
     }
 
     /* Set image format */
-    if (xiSetParamInt(*handle, XI_PRM_IMAGE_DATA_FORMAT, IAC_CAM_FORMAT) != XI_OK) {
+    if (xiSetParamInt(*handle,
+                      XI_PRM_IMAGE_DATA_FORMAT,
+                      IAC_CAM_FORMAT) != XI_OK) {
         fprintf(stderr, "Unable to set image format!\n");
         return IAC_FAILURE;
     }

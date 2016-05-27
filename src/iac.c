@@ -158,7 +158,6 @@ static MagickWand ***create_tiles(XI_IMG *image, config_t *config)
 {
     MagickWand *wand;
     MagickWand ***wands;
-
     iac_image_read_params_t params = {
         image->width,
         image->height,
@@ -169,8 +168,8 @@ static MagickWand ***create_tiles(XI_IMG *image, config_t *config)
     /* Read camera image into wand */
     iac_image_init();
     wand = iac_image_read(&params,
-                                (const unsigned char *) image->bp,
-                                (const size_t) image->bp_size);
+                          (const unsigned char *) image->bp,
+                          (const size_t) image->bp_size);
     wands = iac_image_tiles(wand, IAC_IMAGE_DIVS);
 
     return wands;
@@ -202,7 +201,9 @@ static int transfer_tiles(MagickWand ***wands, config_t *config)
             if (blob == NULL)
                 return IAC_FAILURE;
             size = htonl((uint32_t) size);
-            if (iac_spi_transfer(fd, (uint8_t *) &size, sizeof(&size)) == IAC_FAILURE)
+            if (iac_spi_transfer(fd,
+                                 (uint8_t *) &size,
+                                 sizeof(&size)) == IAC_FAILURE)
                 return IAC_FAILURE;
             if (iac_spi_transfer(fd, blob, (uint32_t) size) == IAC_FAILURE)
                 return IAC_FAILURE;
