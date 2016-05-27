@@ -76,11 +76,11 @@ static config_t parse_args(int argc, char **argv)
         { "version", no_argument, 0, 0 },
         { 0, 0, 0, 0 }
     };
-
-    /* Parse command line options */
     int long_index = 0;
+
     memset(&config, 0, sizeof(config));
 
+    /* Parse command line options */
     while ((opt = getopt_long(argc,
                               argv,
                               "e:g:D:w",
