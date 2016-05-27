@@ -158,8 +158,10 @@ int main(int argc, char **argv)
             if (tile_blob == NULL)
                 return EXIT_FAILURE;
             tile_data_size = htonl((uint32_t) tile_data_size);
-            iac_spi_transfer(fd, (uint8_t *) &tile_data_size, sizeof(&tile_data_size));
-            iac_spi_transfer(fd, tile_blob, (uint32_t) tile_data_size);
+            if (iac_spi_transfer(fd, (uint8_t *) &tile_data_size, sizeof(&tile_data_size)) == IAC_FAILURE)
+                return EXIT_FAILURE;
+            if (iac_spi_transfer(fd, tile_blob, (uint32_t) tile_data_size) == IAC_FAILURE)
+                return EXIT_FAILURE;
         }
     }
 
