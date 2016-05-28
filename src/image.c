@@ -171,13 +171,15 @@ unsigned char *iac_image_blob(MagickWand *wand, size_t *data_size)
 {
     unsigned char *blob;
 
-    if(MagickSetImageFormat(wand, IAC_IMAGE_BLOB_FORMAT) == MagickFalse) {
+    /* Set image format of blob */
+    if (MagickSetImageFormat(wand, IAC_IMAGE_BLOB_FORMAT) == MagickFalse) {
         iac_image_exception(wand);
         return NULL;
     }
 
+    /* Get image blob from wand */
     blob = MagickGetImageBlob(wand, data_size);
-    if(blob == NULL) {
+    if (blob == NULL) {
         iac_image_exception(wand);
         return NULL;
     }
