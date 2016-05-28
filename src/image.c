@@ -106,7 +106,7 @@ void iac_image_destroy(MagickWand *wand)
 
 MagickWand ***iac_image_tiles(MagickWand *wand, const unsigned int divs)
 {
-    MagickWand ***mwtiles = NULL;
+    MagickWand ***wands;
     size_t width;
     size_t height;
     unsigned int i, j;
@@ -118,33 +118,37 @@ MagickWand ***iac_image_tiles(MagickWand *wand, const unsigned int divs)
     height = height / divs + (height % divs ? 1 : 0);
 
     /* Allocate memory for rows */
-    mwtiles = malloc(sizeof(MagickWand **) * divs);
-
+    wands = malloc(sizeof(MagickWand **) * divs);
     for (i = 0; i < divs; i++) {
 
         /* Allocate memory for columns */
-        mwtiles[i] = malloc(sizeof(MagickWand *) * divs);
+        wands[i] = malloc(sizeof(MagickWand *) * divs);
         for (j = 0; j < divs; j++) {
-            mwtiles[i][j] = NULL;
+            wands[i][j] = NULL;
 
             /* Crop image to tiles */
-            mwtiles[i][j] = CloneMagickWand(wand);
-            if (MagickCropImage(mwtiles[i][j],
+            wands[i][j] = CloneMagickWand(wand);
+            if (MagickCropImage(wands[i][j],
                                 width,
                                 height,
                                 (ssize_t) (j * width),
                                 (ssize_t) (i * height)) == MagickFalse) {
-                iac_image_exception(mwtiles[i][j]);
-                iac_image_destroy(mwtiles[i][j]);
-                /* XXX: Free previous wands */
-                DestroyMagickWand(mwtiles[i][j]);
-                free(mwtiles[i]);
+                iac_image_exception(wands[i][j]);
+                iac_image_destroy(wands[i][j]);
+                /* Free previous wands */
+                while (--i >= 0) {
+                    while (--j >= 0)
+                        if (wands[i][j])
+                            DestroyMagickWand(wands[i][j]);
+                    free(wands[i]);
+                }
+                free(wands);
                 return NULL;
             }
         }
     }
 
-    return mwtiles;
+    return wands;
 }
 
 
@@ -156,9 +160,9 @@ void iac_image_tiles_destroy(MagickWand ***wands, const unsigned int divs)
         for (j = 0; j < divs; j++)
             if (wands[i][j])
                 DestroyMagickWand(wands[i][j]);
-        if (wands[i])
-            free(wands[i]);
+        free(wands[i]);
     }
+    free(wands);
 
 }
 
