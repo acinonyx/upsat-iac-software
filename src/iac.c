@@ -33,6 +33,9 @@
 #define IAC_VERSION                     "0.1.0"
 
 typedef struct config_t {
+    char *input;
+    size_t width;
+    size_t height;
     int exposure;
     double gain;
     int auto_wb;
@@ -41,8 +44,9 @@ typedef struct config_t {
 
 static int usage(const char *, const char *);
 static config_t parse_args(int, char **);
-static HANDLE get_image(XI_IMG *, const config_t *);
-static MagickWand ***create_tiles(const XI_IMG *, const config_t *);
+static HANDLE get_cam_image(XI_IMG *, const config_t *);
+static MagickWand ***tile_cam_image(const XI_IMG *, const config_t *);
+static MagickWand ***tile_file_image(const config_t *);
 static int transfer_tiles(MagickWand ***, const config_t *);
 
 static int usage(const char *name, const char *version)
@@ -51,6 +55,9 @@ static int usage(const char *name, const char *version)
             "\n"
             "Usage: %s [OPTIONS]...\n"
             "Options:\n"
+            "  -i, --input=FILE              Read raw image from file\n"
+            "      --width=SIZE              Width of raw image file\n"
+            "      --height=SIZE             Height of raw image file\n"
             "  -e, --exposure=EXPOSURE       Set camera exposure time in microseconds\n"
             "  -g, --gain=GAIN               Set camera gain in dB\n"
             "  -w                            Enable camera automatic white balance\n"
@@ -68,6 +75,9 @@ static config_t parse_args(int argc, char **argv)
     int opt;
     config_t config;
     static struct option long_options[] = {
+        { "input", required_argument, 0, 'i' },
+        { "width", required_argument, 0 , 0 },
+        { "height", required_argument, 0 , 0 },
         { "exposure", required_argument, 0 , 'e' },
         { "gain", required_argument, 0, 'g' },
         { "auto-wb", no_argument, 0, 'w' },
@@ -89,7 +99,13 @@ static config_t parse_args(int argc, char **argv)
         switch (opt) {
         case 0:
             switch (long_index) {
-            case 5:
+            case 1:
+                config.width = (size_t) atoi(optarg);
+                break;
+            case 2:
+                config.height = (size_t) atoi(optarg);
+                break;
+            case 8:
                 fprintf(stderr,
                         "Image acquisition controller utility, version %s\n",
                         IAC_VERSION);
@@ -98,6 +114,9 @@ static config_t parse_args(int argc, char **argv)
             default:
                 exit(usage(argv[0], IAC_VERSION));
             }
+            break;
+        case 'i':
+            config.input = optarg;
             break;
         case 'e':
             config.exposure = atoi(optarg);
@@ -116,11 +135,17 @@ static config_t parse_args(int argc, char **argv)
         }
     }
 
+    /* Validation */
+    if (config.input && !(config.width && config.height)) {
+        fprintf(stderr, "Width and height of image must be specified!\n");
+        exit(EXIT_FAILURE);
+    }
+
     return config;
 }
 
 
-static HANDLE get_image(XI_IMG *image, const config_t *config)
+static HANDLE get_cam_image(XI_IMG *image, const config_t *config)
 {
     HANDLE handle;
     iac_cam_init_params_t init_params = {
@@ -154,7 +179,7 @@ static HANDLE get_image(XI_IMG *image, const config_t *config)
 }
 
 
-static MagickWand ***create_tiles(const XI_IMG *image, const config_t *config)
+static MagickWand ***tile_cam_image(const XI_IMG *image, const config_t *config)
 {
     MagickWand *wand;
     MagickWand ***wands;
@@ -168,8 +193,28 @@ static MagickWand ***create_tiles(const XI_IMG *image, const config_t *config)
     /* Read camera image into wand */
     iac_image_init();
     wand = iac_image_read_blob(&params,
-                          (const unsigned char *) image->bp,
-                          (const size_t) image->bp_size);
+                               (const unsigned char *) image->bp,
+                               (const size_t) image->bp_size);
+    wands = iac_image_tiles(wand, IAC_IMAGE_DIVS);
+
+    return wands;
+}
+
+
+static MagickWand ***tile_file_image(const config_t *config)
+{
+    MagickWand *wand;
+    MagickWand ***wands;
+    iac_image_read_params_t params = {
+        config->width,
+        config->height,
+        IAC_IMAGE_FORMAT,
+        IAC_IMAGE_DEPTH,
+    };
+
+    /* Read file image into wand */
+    iac_image_init();
+    wand = iac_image_read_file(&params, config->input);
     wands = iac_image_tiles(wand, IAC_IMAGE_DIVS);
 
     return wands;
@@ -197,7 +242,7 @@ static int transfer_tiles(MagickWand ***wands, const config_t *config)
     /* Write tiles to SPI */
     for (i = 0; i < IAC_IMAGE_DIVS; i++) {
         for (j = 0; j < IAC_IMAGE_DIVS; j++) {
-            blob = iac_image_blob(wands[i][j], &size);
+            blob = iac_image_get_blob(wands[i][j], &size);
             if (blob == NULL)
                 return IAC_FAILURE;
             size = htonl((uint32_t) size);
@@ -223,8 +268,13 @@ int main(int argc, char **argv)
     MagickWand ***wands;
 
     config = parse_args(argc, argv);
-    handle = get_image(&image, &config);
-    wands = create_tiles(&image, &config);
+    if (!config.input) {
+        handle = get_cam_image(&image, &config);
+        wands = tile_cam_image(&image, &config);
+    }
+    else {
+        wands = tile_file_image(&config);
+    }
     if (transfer_tiles(wands, &config) == IAC_FAILURE) {
         fprintf(stderr, "Failed to transfer tiles!\n");
         return EXIT_FAILURE;

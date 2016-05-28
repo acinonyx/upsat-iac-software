@@ -88,8 +88,8 @@ static MagickWand *iac_image_new(const iac_image_read_params_t *params)
 
 
 MagickWand *iac_image_read_blob(const iac_image_read_params_t *params,
-                           const unsigned char *data,
-                           const size_t data_size)
+                                const unsigned char *data,
+                                const size_t data_size)
 {
     MagickWand *wand;
 
@@ -100,6 +100,27 @@ MagickWand *iac_image_read_blob(const iac_image_read_params_t *params,
 
     /* Read blob into wand */
     if (MagickReadImageBlob(wand, data, data_size) == MagickFalse) {
+        iac_image_exception(wand);
+        iac_image_destroy(wand);
+        return NULL;
+    }
+
+    return wand;
+}
+
+
+MagickWand *iac_image_read_file(const iac_image_read_params_t *params,
+                                const char *filename)
+{
+    MagickWand *wand;
+
+    /* Create new wand */
+    wand = iac_image_new(params);
+    if (!wand)
+        return NULL;
+
+    /* Read file into wand */
+    if (MagickReadImage(wand, filename) == MagickFalse) {
         iac_image_exception(wand);
         iac_image_destroy(wand);
         return NULL;
@@ -181,7 +202,7 @@ void iac_image_tiles_destroy(MagickWand ***wands, const unsigned int divs)
 }
 
 
-unsigned char *iac_image_blob(MagickWand *wand, size_t *data_size)
+unsigned char *iac_image_get_blob(MagickWand *wand, size_t *data_size)
 {
     unsigned char *blob;
 
