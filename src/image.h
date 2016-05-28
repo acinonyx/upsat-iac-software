@@ -25,6 +25,7 @@ typedef struct iac_image_read_params_t {
     size_t depth;
 } iac_image_read_params_t;
 
+void iac_image_exception(const MagickWand *);
 void iac_image_init(void);
 void iac_image_term(void);
 void iac_image_destroy(MagickWand *);

@@ -23,6 +23,7 @@
 #include <getopt.h>
 #include <arpa/inet.h>
 #include <linux/spi/spidev.h>
+#include <linux/limits.h>
 #include <m3api/xiApi.h>
 #include <wand/magick_wand.h>
 #include "iac.h"
@@ -36,10 +37,13 @@ typedef struct config_t {
     char *input;
     size_t width;
     size_t height;
+    char *output;
+    char *prefix;
     int exposure;
     double gain;
     int auto_wb;
     char *spi_device;
+    int verbose;
 } config_t;
 
 static int usage(const char *, const char *);
@@ -48,6 +52,7 @@ static HANDLE get_cam_image(XI_IMG *, const config_t *);
 static MagickWand ***tile_cam_image(const XI_IMG *, const config_t *);
 static MagickWand ***tile_file_image(const config_t *);
 static int transfer_tiles(MagickWand ***, const config_t *);
+static int write_tiles(MagickWand ***, const config_t *);
 
 static int usage(const char *name, const char *version)
 {
@@ -58,10 +63,13 @@ static int usage(const char *name, const char *version)
             "  -i, --input=FILE              Read raw image from file\n"
             "      --width=SIZE              Width of raw image file\n"
             "      --height=SIZE             Height of raw image file\n"
+            "  -o, --output=DIRECTORY        Write tiles to directory\n"
+            "      --prefix=NAME             Filename prefix for output tiles\n"
             "  -e, --exposure=EXPOSURE       Set camera exposure time in microseconds\n"
             "  -g, --gain=GAIN               Set camera gain in dB\n"
             "  -w                            Enable camera automatic white balance\n"
             "  -D, --spi-dev=DEVICE          SPI device to use (default: %s)\n"
+            "  -v                            Verbose output\n"
             "  --help                        Display help and exit\n"
             "  --version                     Output version and exit\n"
             "\n", version, name, IAC_SPI_DEFAULT_DEVICE);
@@ -78,6 +86,8 @@ static config_t parse_args(int argc, char **argv)
         { "input", required_argument, 0, 'i' },
         { "width", required_argument, 0 , 0 },
         { "height", required_argument, 0 , 0 },
+        { "output", required_argument, 0, 'o' },
+        { "prefix", required_argument, 0, 0 },
         { "exposure", required_argument, 0 , 'e' },
         { "gain", required_argument, 0, 'g' },
         { "auto-wb", no_argument, 0, 'w' },
@@ -105,7 +115,10 @@ static config_t parse_args(int argc, char **argv)
             case 2:
                 config.height = (size_t) atoi(optarg);
                 break;
-            case 8:
+            case 4:
+                config.prefix = optarg;
+                break;
+            case 10:
                 fprintf(stderr,
                         "Image acquisition controller utility, version %s\n",
                         IAC_VERSION);
@@ -117,6 +130,9 @@ static config_t parse_args(int argc, char **argv)
             break;
         case 'i':
             config.input = optarg;
+            break;
+        case 'o':
+            config.output = optarg;
             break;
         case 'e':
             config.exposure = atoi(optarg);
@@ -130,6 +146,9 @@ static config_t parse_args(int argc, char **argv)
         case 'D':
             config.spi_device = optarg;
             break;
+        case 'v':
+            config.verbose = 1;
+            break;
         default:
             exit(usage(argv[0], IAC_VERSION));
         }
@@ -138,6 +157,11 @@ static config_t parse_args(int argc, char **argv)
     /* Validation */
     if (config.input && !(config.width && config.height)) {
         fprintf(stderr, "Width and height of image must be specified!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (config.output && !(config.prefix)) {
+        fprintf(stderr, "Filename prefix must be specified!\n");
         exit(EXIT_FAILURE);
     }
 
@@ -221,6 +245,39 @@ static MagickWand ***tile_file_image(const config_t *config)
 }
 
 
+static int write_tiles(MagickWand ***wands, const config_t *config)
+{
+    int i, j;
+    char filename[PATH_MAX];
+
+    /* Write tiles to files */
+    for (i = 0; i < IAC_IMAGE_DIVS; i++) {
+        for (j = 0; j < IAC_IMAGE_DIVS; j++) {
+            /* Set image format of files */
+            if (MagickSetImageFormat(wands[i][j],
+                                     IAC_IMAGE_BLOB_FORMAT) == MagickFalse) {
+                iac_image_exception(wands[i][j]);
+                return IAC_FAILURE;
+            }
+            snprintf(filename,
+                     PATH_MAX,
+                     "%s/%s-%u-%u.%s",
+                     config->output,
+                     config->prefix,
+                     i,
+                     j,
+                     IAC_IMAGE_BLOB_FORMAT);
+            if (MagickWriteImage(wands[i][j], filename) == MagickFalse) {
+                iac_image_exception(wands[i][j]);
+                return IAC_FAILURE;
+            }
+        }
+    }
+
+    return IAC_SUCCESS;
+}
+
+
 static int transfer_tiles(MagickWand ***wands, const config_t *config)
 {
     char *device = IAC_SPI_DEFAULT_DEVICE;
@@ -275,9 +332,18 @@ int main(int argc, char **argv)
     else {
         wands = tile_file_image(&config);
     }
-    if (transfer_tiles(wands, &config) == IAC_FAILURE) {
-        fprintf(stderr, "Failed to transfer tiles!\n");
-        return EXIT_FAILURE;
+
+    if (!config.output) {
+        if (transfer_tiles(wands, &config) == IAC_FAILURE) {
+            fprintf(stderr, "Failed to transfer tiles!\n");
+            return EXIT_FAILURE;
+        }
+    }
+    else {
+        if (write_tiles(wands, &config) == IAC_FAILURE) {
+            fprintf(stderr, "Failed to write tiles!\n");
+            return EXIT_FAILURE;
+        }
     }
 
     iac_image_tiles_destroy(wands, IAC_IMAGE_DIVS);
@@ -285,10 +351,12 @@ int main(int argc, char **argv)
     /* Terminate image */
     iac_image_term();
 
-    /* Close camera */
-    if (iac_cam_close(&handle) == IAC_FAILURE) {
-        fprintf(stderr, "Unable to close camera!\n");
-        return EXIT_FAILURE;
+    if (!config.input) {
+        /* Close camera */
+        if (iac_cam_close(&handle) == IAC_FAILURE) {
+            fprintf(stderr, "Unable to close camera!\n");
+            return EXIT_FAILURE;
+        }
     }
 
     return EXIT_SUCCESS;

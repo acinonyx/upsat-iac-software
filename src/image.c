@@ -20,10 +20,9 @@
 #include "iac.h"
 #include "image.h"
 
-static void iac_image_exception(const MagickWand *);
 static MagickWand *iac_image_new(const iac_image_read_params_t *);
 
-static void iac_image_exception(const MagickWand *wand)
+void iac_image_exception(const MagickWand *wand)
 {
     char *desc;
     ExceptionType severity;
