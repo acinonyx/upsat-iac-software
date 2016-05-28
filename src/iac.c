@@ -141,8 +141,8 @@ static HANDLE get_image(XI_IMG *image, const config_t *config)
     }
 
     /* Acquire image from camera */
-    memset(image, 0, sizeof(&image));
-    image->size = sizeof(&image);
+    memset(image, 0, sizeof(XI_IMG));
+    image->size = sizeof(XI_IMG);
 
     if (iac_cam_acquire(&handle, image) == IAC_FAILURE) {
         fprintf(stderr, "Unable to acquire image!\n");
