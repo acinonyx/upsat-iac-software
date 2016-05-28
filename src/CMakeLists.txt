@@ -5,7 +5,20 @@ include(GNUInstallDirs)
 #include(FindImageMagick
 #  RESULT_VARIABLE FindImageMagick)
 
-add_definitions(-ggdb -Wall -Werror -Wconversion -Wmissing-declarations -Wshadow --std=gnu99 -pedantic)
+add_definitions(
+  -ggdb
+  -Wall
+  -Werror
+  -Wconversion
+  -Wmissing-declarations
+  -Wmissing-prototypes
+  -Wstrict-prototypes
+  -Wcast-qual
+  -Wcast-align
+  -Wshadow
+  -pedantic
+  --std=gnu99
+  )
 add_definitions(
   -DMAGICKCORE_QUANTUM_DEPTH=16
   -DMAGICKCORE_HDRI_ENABLE=0
