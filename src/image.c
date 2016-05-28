@@ -60,38 +60,38 @@ MagickWand *iac_image_read(const iac_image_read_params_t *params,
     wand = NewMagickWand();
     if (!wand) {
         iac_image_destroy(wand);
-        return(NULL);
+        return NULL;
     }
 
     /* Set width and height of image */
     if (MagickSetSize(wand, params->width, params->height) == MagickFalse) {
         iac_image_exception(wand);
         iac_image_destroy(wand);
-        return(NULL);
+        return NULL;
     }
 
     /* Set format of image */
     if (MagickSetFormat(wand, params->format) == MagickFalse) {
         iac_image_exception(wand);
         iac_image_destroy(wand);
-        return(NULL);
+        return NULL;
     }
 
     /* Set color depth of image */
     if (MagickSetDepth(wand, params->depth) == MagickFalse) {
         iac_image_exception(wand);
         iac_image_destroy(wand);
-        return(NULL);
+        return NULL;
     }
 
     /* Read blob into wand */
     if (MagickReadImageBlob(wand, data, data_size) == MagickFalse) {
         iac_image_exception(wand);
         iac_image_destroy(wand);
-        return(NULL);
+        return NULL;
     }
 
-    return(wand);
+    return wand;
 }
 
 

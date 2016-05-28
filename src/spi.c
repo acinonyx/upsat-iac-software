@@ -36,28 +36,28 @@ int iac_spi_init(const char *device, const iac_spi_init_params_t *params)
     fd = open(device, O_RDWR);
     if (fd == -1) {
         perror("Unable to open SPI device");
-        return(-1);
+        return -1;
     }
 
     /* Set mode */
     if (ioctl(fd, SPI_IOC_WR_MODE, &params->mode) == -1) {
         perror("Unable to set SPI mode");
-        return(-1);
+        return -1;
     }
 
     /* Set bits per word */
     if (ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &params->bits_per_word) == -1) {
         perror("Unable to set SPI bits per word");
-        return(-1);
+        return -1;
     }
 
     /* Set maximum speed in Hz  */
     if (ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &params->max_speed_hz) == -1) {
         perror("Unable to set SPI maximum speed");
-        return(-1);
+        return -1;
     }
 
-    return(fd);
+    return fd;
 }
 
 
