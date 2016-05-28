@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <linux/types.h>
 #include <linux/spi/spidev.h>
 #include "iac.h"
 #include "spi.h"
@@ -66,8 +67,8 @@ int iac_spi_transfer(const int fd, uint8_t *buf, const uint32_t buf_siz)
 
     memset(&transfer, 0, sizeof(transfer));
 
-    transfer.tx_buf = (uint64_t) buf;
-    transfer.rx_buf = (uint64_t) buf;
+    transfer.tx_buf = (__u64) buf;
+    transfer.rx_buf = (__u64) buf;
     transfer.len = buf_siz;
 
     if (ioctl(fd, SPI_IOC_MESSAGE(1), &transfer) == -1) {
