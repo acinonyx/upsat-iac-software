@@ -30,7 +30,7 @@ void iac_image_term(void);
 void iac_image_destroy(MagickWand *);
 MagickWand ***iac_image_tiles(MagickWand *, const unsigned int);
 void iac_image_tiles_destroy(MagickWand ***, const unsigned int);
-MagickWand *iac_image_read(const iac_image_read_params_t *,
+MagickWand *iac_image_read_blob(const iac_image_read_params_t *,
                            const unsigned char *,
                            const size_t);
 unsigned char *iac_image_blob(MagickWand *, size_t *);

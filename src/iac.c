@@ -167,7 +167,7 @@ static MagickWand ***create_tiles(const XI_IMG *image, const config_t *config)
 
     /* Read camera image into wand */
     iac_image_init();
-    wand = iac_image_read(&params,
+    wand = iac_image_read_blob(&params,
                           (const unsigned char *) image->bp,
                           (const size_t) image->bp_size);
     wands = iac_image_tiles(wand, IAC_IMAGE_DIVS);

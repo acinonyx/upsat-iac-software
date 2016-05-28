@@ -21,6 +21,7 @@
 #include "image.h"
 
 static void iac_image_exception(const MagickWand *);
+static MagickWand *iac_image_new(const iac_image_read_params_t *);
 
 static void iac_image_exception(const MagickWand *wand)
 {
@@ -50,9 +51,7 @@ void iac_image_term(void)
 }
 
 
-MagickWand *iac_image_read(const iac_image_read_params_t *params,
-                           const unsigned char *data,
-                           const size_t data_size)
+static MagickWand *iac_image_new(const iac_image_read_params_t *params)
 {
     MagickWand *wand = NULL;
 
@@ -83,6 +82,21 @@ MagickWand *iac_image_read(const iac_image_read_params_t *params,
         iac_image_destroy(wand);
         return NULL;
     }
+
+    return wand;
+}
+
+
+MagickWand *iac_image_read_blob(const iac_image_read_params_t *params,
+                           const unsigned char *data,
+                           const size_t data_size)
+{
+    MagickWand *wand;
+
+    /* Create new wand */
+    wand = iac_image_new(params);
+    if (!wand)
+        return NULL;
 
     /* Read blob into wand */
     if (MagickReadImageBlob(wand, data, data_size) == MagickFalse) {
