@@ -22,11 +22,11 @@
 #define IAC_FAILURE                     -1
 
 #define IAC_CAM_DEVICE                  0
-#define IAC_CAM_FORMAT                  XI_RAW8
+#define IAC_CAM_FORMAT                  XI_RGB24
 #define IAC_CAM_ACQUIRE_TIMEOUT         5000
-#define IAC_IMAGE_FORMAT                "rgb"
+#define IAC_IMAGE_FORMAT                "BGR"
 #define IAC_IMAGE_DEPTH                 8
-#define IAC_IMAGE_DIVS                  2
+#define IAC_IMAGE_DIVS                  10
 #define IAC_IMAGE_BLOB_FORMAT           "JPG"
 #define IAC_SPI_MODE                    SPI_MODE_0
 #define IAC_SPI_BITS                    8
