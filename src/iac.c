@@ -312,6 +312,7 @@ static int transfer_tiles(MagickWand ***wands, const config_t *config)
             MagickRelinquishMemory(blob);
         }
     }
+    close(fd);
 
     return IAC_SUCCESS;
 }

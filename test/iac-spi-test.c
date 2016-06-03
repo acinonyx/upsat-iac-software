@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <linux/spi/spidev.h>
@@ -47,5 +48,6 @@ int main(int argc, char **argv)
     if (iac_spi_transfer(fd, blob, sizeof(blob)) == IAC_FAILURE)
         return IAC_FAILURE;
 
+    close(fd);
     return EXIT_SUCCESS;
 }
