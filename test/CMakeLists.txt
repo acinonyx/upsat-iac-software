@@ -32,3 +32,4 @@ endif()
 
 add_executable(iac-spi-test ${SOURCES})
 target_link_libraries(iac-spi-test ${LIBS})
+install(TARGETS iac-spi-test RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
