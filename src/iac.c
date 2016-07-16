@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <getopt.h>
+#include <unistd.h>
 #include <arpa/inet.h>
 #include <linux/spi/spidev.h>
 #include <linux/limits.h>
@@ -30,8 +31,9 @@
 #include "camera.h"
 #include "image.h"
 #include "spi.h"
+#include "obc.h"
 
-#define IAC_VERSION                     "0.1.0"
+#define IAC_VERSION                     "0.2.0"
 
 typedef struct config_t {
     char *input;
@@ -288,7 +290,11 @@ static int transfer_tiles(MagickWand ***wands, const config_t *config)
     };
     int fd;
     int i, j;
-    size_t size;
+    iac_obc_block_t block;
+    iac_obc_packet_t packet;
+    size_t size, mod;
+    size_t k, blocks;
+    uint16_t blocks_data;
     unsigned char *blob;
 
     /* Initialize SPI */
@@ -302,13 +308,46 @@ static int transfer_tiles(MagickWand ***wands, const config_t *config)
             blob = iac_image_get_blob(wands[i][j], &size);
             if (blob == NULL)
                 return IAC_FAILURE;
-            size = htonl((uint32_t) size);
-            if (iac_spi_transfer(fd,
-                                 (uint8_t *) &size,
-                                 sizeof(&size)) == IAC_FAILURE)
-                return IAC_FAILURE;
-            if (iac_spi_transfer(fd, blob, (uint32_t) size) == IAC_FAILURE)
-                return IAC_FAILURE;
+
+            mod = size % IAC_OBC_BLOCK_SIZE;
+            block.tile = (uint8_t) (j + i * IAC_IMAGE_DIVS);
+            blocks = ((size - 1) / IAC_OBC_BLOCK_SIZE) + 1;
+
+            for (k = 0; k <= blocks; k++) {
+                block.index = (uint16_t) k;
+                switch (k) {
+                case 0:
+                    /* Transfer number of tile blocks */
+                    blocks_data = htons((uint16_t) blocks);
+                    block.data = (uint8_t *) &blocks_data;
+                    block.data_size = sizeof(blocks_data);
+                    break;
+                case 1:
+                    /* First block of tile */
+                    block.data = blob;
+                default:
+                    /* Transfer tile block */
+                    if (k == blocks && mod)
+                        block.data_size = mod;
+                    else
+                        block.data_size = IAC_OBC_BLOCK_SIZE;
+                    break;
+                }
+                do {
+                    usleep(IAC_OBC_BLOCK_USLEEP);
+                    /* Pack tile block */
+                    packet = iac_obc_packet(&block);
+                    /* Transfer packets */
+                    if (iac_spi_transfer(fd,
+                                         packet.buf,
+                                         (uint32_t) packet.size) == IAC_FAILURE)
+                        return IAC_FAILURE;
+                    free(packet.buf);
+                } while (packet.buf[0] != IAC_OBC_BLOCK_ACK);
+                /* Next block */
+                block.data += IAC_OBC_BLOCK_SIZE;
+            }
+
             MagickRelinquishMemory(blob);
         }
     }

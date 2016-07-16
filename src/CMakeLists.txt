@@ -50,7 +50,7 @@ find_library(xiApi_LIBRARIES
 include_directories(SYSTEM ${xiApi_INCLUDE_DIRS})
 link_directories(${xiApi_LIBRARIES})
 
-set(SOURCES iac.c camera.c image.c spi.c)
+set(SOURCES iac.c camera.c image.c spi.c obc.c utils.c)
 set(LIBS m3api MagickWand)
 
 if(DEBUG)

@@ -31,6 +31,10 @@
 #define IAC_SPI_MODE                    SPI_MODE_0
 #define IAC_SPI_BITS                    8
 #define IAC_SPI_MAX_HZ                  500000
+#define IAC_OBC_BLOCK_ACK               0x55
+#define IAC_OBC_BLOCK_SIZE              2048
+#define IAC_OBC_BLOCK_PADDING           0
+#define IAC_OBC_BLOCK_USLEEP            500000
 
 /* Default values */
 #define IAC_SPI_DEFAULT_DEVICE          "/dev/spidev1.0"
