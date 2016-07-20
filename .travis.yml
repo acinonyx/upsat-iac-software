@@ -9,7 +9,8 @@ before_install:
   - wget -P $HOME/dl http://www.ximea.com/downloads/recent/XIMEA_Linux_SP.tgz
   - tar -C $HOME/src/XIMEA_Linux_SP -xzf $HOME/dl/XIMEA_Linux_SP.tgz
   - cd $HOME/src/XIMEA_Linux_SP/package
-  - sed -i '/^udevadm/ d' scripts/install_steps
+  - sed -i 's/^\tsudo \(.*\)/\1/' install
+  - sed -i '/^udevadm/ d; s/$EUID/0/' scripts/install_steps
   - ./install
 script:
   - mkdir build
