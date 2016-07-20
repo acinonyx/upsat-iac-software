@@ -7,7 +7,7 @@ addons:
 before_install:
   - mkdir -p $HOME/dl $HOME/src/XIMEA_Linux_SP
   - wget -P $HOME/dl http://www.ximea.com/downloads/recent/XIMEA_Linux_SP.tgz
-  - tar -C $HOME/src/XIMEA_Linux_SP -xzf XIMEA_Linux_SP.tgz
+  - tar -C $HOME/src/XIMEA_Linux_SP -xzf $HOME/dl/XIMEA_Linux_SP.tgz
   - cd $HOME/src/XIMEA_Linux_SP
   - ./install
 script:
