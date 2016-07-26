@@ -105,7 +105,7 @@ static config_t parse_args(int argc, char **argv)
     /* Parse command line options */
     while ((opt = getopt_long(argc,
                               argv,
-                              "e:g:D:w",
+                              "i:o:e:g:D:w",
                               long_options,
                               &long_index)) != -1) {
         switch (opt) {
