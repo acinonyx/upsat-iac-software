@@ -5,13 +5,9 @@ addons:
       - libmagickwand-dev
       - cmocka
 before_install:
-  - mkdir -p $HOME/dl $HOME/src/XIMEA_Linux_SP
+  - mkdir -p $HOME/dl $HOME/.local/lib
   - wget -P $HOME/dl http://www.ximea.com/downloads/recent/XIMEA_Linux_SP.tgz
-  - tar -C $HOME/src/XIMEA_Linux_SP -xzf $HOME/dl/XIMEA_Linux_SP.tgz
-  - cd $HOME/src/XIMEA_Linux_SP/package
-  - sed -i 's/^\tsudo \(.*\)/\1/' install
-  - sed -i '/^udevadm/ d; s/$EUID/0/' scripts/install_steps
-  - ./install
+  - tar -C $HOME/.local/lib -xvzf XIMEA_Linux_SP.tgz --strip-components=3 package/api/X64
 script:
   - mkdir build
   - cd build
@@ -19,4 +15,4 @@ script:
   - make
 cache:
   directories:
-    - $HOME/src
+    - $HOME/dl
