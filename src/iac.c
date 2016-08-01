@@ -295,6 +295,7 @@ static int transfer_tiles(MagickWand ***wands, const config_t *config)
     size_t size, mod;
     size_t k, blocks;
     uint16_t blocks_data;
+    uint8_t resp;
     unsigned char *blob;
 
     /* Initialize SPI */
@@ -342,8 +343,9 @@ static int transfer_tiles(MagickWand ***wands, const config_t *config)
                                          packet.buf,
                                          (uint32_t) packet.size) == IAC_FAILURE)
                         return IAC_FAILURE;
+                    resp = packet.buf[0];
                     free(packet.buf);
-                } while (packet.buf[0] != IAC_OBC_BLOCK_ACK);
+                } while (resp != IAC_OBC_BLOCK_ACK);
                 /* Next block */
                 block.data += IAC_OBC_BLOCK_SIZE;
             }
