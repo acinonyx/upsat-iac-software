@@ -4,10 +4,14 @@ addons:
     packages:
       - libmagickwand-dev
       - cmocka
-before_install:
-  - mkdir -p $HOME/dl $HOME/.local/lib
+install:
+  - mkdir -p $HOME/dl $HOME/.local/lib $HOME/.local/include/m3api
   - wget -P $HOME/dl http://www.ximea.com/downloads/recent/XIMEA_Linux_SP.tgz
-  - tar -C $HOME/.local/lib -xvzf XIMEA_Linux_SP.tgz --strip-components=3 package/api/X64
+  - tar -C $HOME/.local/lib -xvzf $HOME/dl/XIMEA_Linux_SP.tgz --strip-components=3 package/api/X64
+  - (cd $HOME/.local/lib; ln -s libm3api.so.2 libm3api.so)
+  - tar -C $HOME/.local/include/m3api -xvzf $HOME/dl/XIMEA_Linux_SP.tgz --strip-components=2 package/include
+  - export CMAKE_LIBRARY_PATH=$HOME/.local/lib
+  - export CMAKE_INCLUDE_PATH=$HOME/.local/include
 script:
   - mkdir build
   - cd build
