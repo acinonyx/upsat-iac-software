@@ -2,6 +2,8 @@ language: c
 addons:
   apt:
     packages:
+      - libusb-1.0-0
+      - libraw1394-11
       - libmagickwand-dev
       - cmocka
 install:
