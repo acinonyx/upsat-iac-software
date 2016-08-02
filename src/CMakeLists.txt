@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 2.8)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/CMakeModules/")
+
 include(GNUInstallDirs)
-#include(FindImageMagick
-#  RESULT_VARIABLE FindImageMagick)
+include(FindImageMagick
+  RESULT_VARIABLE FindImageMagick)
+include(FindXiApi
+  RESULT_VARIABLE FindXiApi)
 
 add_definitions(
   -ggdb
@@ -23,35 +27,21 @@ add_definitions(
   -DMAGICKCORE_HDRI_ENABLE=0
   )
 
-#find_package(ImageMagick
-#  REQUIRED)
-#  COMPONENTS MagickWand)
-
-find_path(ImageMagick_MagickWand_INCLUDE_DIRS
-  NAMES wand/magick_wand.h
-  PATHS /usr/include/ImageMagick
-  )
-find_library(ImageMagick_MagickWand_LIBRARIES
+find_package(ImageMagick
   REQUIRED
-  NAMES MagickWand MagickWand-6.Q16
+  COMPONENTS MagickWand
   )
-
-include_directories(SYSTEM ${ImageMagick_MagickWand_INCLUDE_DIRS})
-link_directories(${ImageMagick_MagickWand_LIBRARIES})
-
-find_path(xiApi_INCLUDE_DIRS
-  NAMES xiApi.h
-  PATHS /opt/XIMEA/include
-  )
-find_library(xiApi_LIBRARIES
+find_package(XiApi
   REQUIRED
-  NAMES m3api
   )
-include_directories(SYSTEM ${xiApi_INCLUDE_DIRS})
-link_directories(${xiApi_LIBRARIES})
+
+include_directories(
+  SYSTEM ${ImageMagick_MagickWand_INCLUDE_DIR}
+  SYSTEM ${XiApi_INCLUDE_DIR}
+  )
 
 set(SOURCES iac.c camera.c image.c spi.c obc.c utils.c)
-set(LIBS m3api MagickWand)
+set(LIBS ${ImageMagick_MagickWand_LIBRARY} ${XiApi_LIBRARY})
 
 if(DEBUG)
   add_definitions(-DDEBUG -g3)
