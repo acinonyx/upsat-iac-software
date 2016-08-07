@@ -1,3 +1,5 @@
+include(FindPackageHandleStandardArgs)
+
 find_path(XiApi_INCLUDE_DIR
   NAMES m3api/xiApi.h
   PATHS /opt/XIMEA/include
