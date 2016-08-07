@@ -352,15 +352,9 @@ static int transfer_tiles(MagickWand ***wands, const config_t *config)
                                          packet.buf,
                                          (uint32_t) packet.size) == IAC_FAILURE)
                         return IAC_FAILURE;
-                    free(packet.buf);
-                    /* Transfer response */
-                    resp = 0;
-                    IAC_VERBOSE("Transferring response...\n");
-                    if (iac_spi_transfer(fd,
-                                         &resp,
-                                         sizeof(resp)) == IAC_FAILURE)
-                        return IAC_FAILURE;
+                    resp = packet.buf[0];
                     IAC_VERBOSE("Response from OBC is 0x%02x...\n", resp);
+                    free(packet.buf);
                 } while (resp != IAC_OBC_BLOCK_ACK);
                 /* Next block */
                 block.data += IAC_OBC_BLOCK_SIZE;
