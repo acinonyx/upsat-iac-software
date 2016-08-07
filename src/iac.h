@@ -34,7 +34,7 @@
 #define IAC_OBC_BLOCK_ACK               0x55
 #define IAC_OBC_BLOCK_SIZE              155
 #define IAC_OBC_BLOCK_PADDING           0
-#define IAC_OBC_BLOCK_USLEEP            500000
+#define IAC_OBC_BLOCK_USLEEP            10000
 
 /* Default values */
 #define IAC_SPI_DEFAULT_DEVICE          "/dev/spidev1.0"
