@@ -360,7 +360,7 @@ static int transfer_tiles(MagickWand ***wands, const config_t *config)
                                          &resp,
                                          sizeof(resp)) == IAC_FAILURE)
                         return IAC_FAILURE;
-                    IAC_VERBOSE("Response from OBC is 0x%#X...\n", resp);
+                    IAC_VERBOSE("Response from OBC is 0x%02x...\n", resp);
                 } while (resp != IAC_OBC_BLOCK_ACK);
                 /* Next block */
                 block.data += IAC_OBC_BLOCK_SIZE;

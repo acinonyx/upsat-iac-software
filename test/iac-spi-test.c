@@ -51,7 +51,7 @@ int main(int argc, char **argv)
         return IAC_FAILURE;
 
     /* Print response */
-    IAC_VERBOSE("Response: 0x%X\n", blob[0]);
+    IAC_VERBOSE("Response: 0x%02x\n", blob[0]);
 
     close(fd);
     return EXIT_SUCCESS;
