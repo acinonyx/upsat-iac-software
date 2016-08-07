@@ -28,8 +28,8 @@ uint8_t *iac_serialize(uint8_t *buf,
 {
 
     buf = realloc(buf, *buf_size + sizeof(data));
-    *buf_size += sizeof(data);
     memcpy(buf + *buf_size, &data, sizeof(data));
+    *buf_size += sizeof(data);
 
     return buf;
 }
@@ -41,9 +41,9 @@ uint8_t *iac_serialize_short(uint8_t *buf,
 {
 
     buf = realloc(buf, *buf_size + sizeof(data));
-    *buf_size += sizeof(data);
     data = htons(data);
     memcpy(buf + *buf_size, &data, sizeof(data));
+    *buf_size += sizeof(data);
 
     return buf;
 }
@@ -55,9 +55,9 @@ uint8_t *iac_serialize_long(uint8_t *buf,
 {
 
     buf = realloc(buf, *buf_size + sizeof(data));
-    *buf_size += sizeof(data);
     data = htonl(data);
     memcpy(buf + *buf_size, &data, sizeof(data));
+    *buf_size += sizeof(data);
 
     return buf;
 }
