@@ -300,6 +300,7 @@ static int transfer_tiles(MagickWand ***wands, const config_t *config)
     unsigned char *blob;
 
     /* Initialize SPI */
+    IAC_VERBOSE("Initializing SPI device %s...\n", IAC_SPI_DEFAULT_DEVICE);
     fd = iac_spi_init(device, &params);
     if (fd == -1)
         return IAC_FAILURE;
@@ -307,6 +308,7 @@ static int transfer_tiles(MagickWand ***wands, const config_t *config)
     /* Write tiles to SPI */
     for (i = 0; i < IAC_IMAGE_DIVS; i++) {
         for (j = 0; j < IAC_IMAGE_DIVS; j++) {
+            IAC_VERBOSE("Getting tile blob at position %u, %u...\n", j, i);
             blob = iac_image_get_blob(wands[i][j], &size);
             if (blob == NULL)
                 return IAC_FAILURE;
@@ -315,7 +317,12 @@ static int transfer_tiles(MagickWand ***wands, const config_t *config)
             block.tile = (uint8_t) (j + i * IAC_IMAGE_DIVS);
             blocks = ((size - 1) / IAC_OBC_BLOCK_SIZE) + 1;
 
+            IAC_VERBOSE("Number of blocks for tile %u, %u is %u...\n",
+                        j,
+                        i,
+                        (unsigned int) blocks);
             for (k = 0; k <= blocks; k++) {
+                IAC_VERBOSE("Preparing buffer for block %u...\n", (unsigned int) k);
                 block.index = (uint16_t) k;
                 switch (k) {
                 case 0:
@@ -340,6 +347,7 @@ static int transfer_tiles(MagickWand ***wands, const config_t *config)
                     /* Pack tile block */
                     packet = iac_obc_packet(&block);
                     /* Transfer packets */
+                    IAC_VERBOSE("Transferring block...\n");
                     if (iac_spi_transfer(fd,
                                          packet.buf,
                                          (uint32_t) packet.size) == IAC_FAILURE)

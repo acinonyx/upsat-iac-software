@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <linux/spi/spidev.h>
 #include "iac.h"
 #include "spi.h"
@@ -48,6 +49,9 @@ int main(int argc, char **argv)
     /* Write to SPI */
     if (iac_spi_transfer(fd, blob, sizeof(blob)) == IAC_FAILURE)
         return IAC_FAILURE;
+
+    /* Print response */
+    IAC_VERBOSE("Response: 0x%X\n", blob[0]);
 
     close(fd);
     return EXIT_SUCCESS;
