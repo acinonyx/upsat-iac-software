@@ -75,7 +75,7 @@ int iac_spi_transfer(const int fd, uint8_t *buf, const uint32_t buf_siz)
     transfer.rx_buf = (__u64) buf;
     transfer.len = buf_siz;
 
-    IAC_VERBOSE("Transferring SPI buffer...\n");
+    IAC_VERBOSE("Transferring SPI buffer with size %u...\n", buf_siz);
     if (ioctl(fd, SPI_IOC_MESSAGE(1), &transfer) == -1) {
         perror("Unable to write ioctl");
         return IAC_FAILURE;
