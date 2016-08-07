@@ -39,4 +39,8 @@
 /* Default values */
 #define IAC_SPI_DEFAULT_DEVICE          "/dev/spidev1.0"
 
+#define IAC_VERBOSE(...)           if (verbose) \
+        fprintf(stderr, __VA_ARGS__);
+extern int verbose;
+
 #endif

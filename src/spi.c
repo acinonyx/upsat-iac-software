@@ -32,6 +32,7 @@ int iac_spi_init(const char *device, const iac_spi_init_params_t *params)
 {
     int fd;
 
+    IAC_VERBOSE("Opening SPI device...\n");
     /* Open SPI device */
     fd = open(device, O_RDWR);
     if (fd == -1) {
@@ -40,18 +41,21 @@ int iac_spi_init(const char *device, const iac_spi_init_params_t *params)
     }
 
     /* Set mode */
+    IAC_VERBOSE("Setting SPI mode...\n");
     if (ioctl(fd, SPI_IOC_WR_MODE, &params->mode) == -1) {
         perror("Unable to set SPI mode");
         return -1;
     }
 
     /* Set bits per word */
+    IAC_VERBOSE("Setting SPI bits per word...\n");
     if (ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &params->bits_per_word) == -1) {
         perror("Unable to set SPI bits per word");
         return -1;
     }
 
     /* Set maximum speed in Hz  */
+    IAC_VERBOSE("Setting SPI maximum speed...\n");
     if (ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &params->max_speed_hz) == -1) {
         perror("Unable to set SPI maximum speed");
         return -1;
@@ -71,6 +75,7 @@ int iac_spi_transfer(const int fd, uint8_t *buf, const uint32_t buf_siz)
     transfer.rx_buf = (__u64) buf;
     transfer.len = buf_siz;
 
+    IAC_VERBOSE("Transferring SPI buffer...\n");
     if (ioctl(fd, SPI_IOC_MESSAGE(1), &transfer) == -1) {
         perror("Unable to write ioctl");
         return IAC_FAILURE;

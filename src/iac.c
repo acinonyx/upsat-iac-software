@@ -48,6 +48,7 @@ typedef struct config_t {
     int verbose;
 } config_t;
 
+int verbose = 0;
 static int usage(const char *, const char *);
 static config_t parse_args(int, char **);
 static HANDLE get_cam_image(XI_IMG *, const config_t *);
@@ -367,6 +368,8 @@ int main(int argc, char **argv)
     MagickWand ***wands;
 
     config = parse_args(argc, argv);
+    verbose = config.verbose;
+
     if (!config.input) {
         handle = get_cam_image(&image, &config);
         wands = tile_cam_image(&image, &config);
