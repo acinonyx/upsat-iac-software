@@ -71,6 +71,7 @@ uint8_t *iac_serialize_pad(uint8_t *buf,
 
     buf = realloc(buf, *buf_size + size);
     memset(buf + *buf_size, data, size);
+    *buf_size += size;
 
     return buf;
 }
@@ -84,6 +85,7 @@ uint8_t *iac_serialize_data(uint8_t *buf,
 
     buf = realloc(buf, *buf_size + size);
     memcpy(buf + *buf_size, data, size);
+    *buf_size += size;
 
     return buf;
 }
