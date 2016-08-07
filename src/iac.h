@@ -32,7 +32,7 @@
 #define IAC_SPI_BITS                    8
 #define IAC_SPI_MAX_HZ                  500000
 #define IAC_OBC_BLOCK_ACK               0x55
-#define IAC_OBC_BLOCK_SIZE              2048
+#define IAC_OBC_BLOCK_SIZE              155
 #define IAC_OBC_BLOCK_PADDING           0
 #define IAC_OBC_BLOCK_USLEEP            500000
 
