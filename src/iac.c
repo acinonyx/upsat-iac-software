@@ -347,7 +347,7 @@ static int transfer_tiles(MagickWand ***wands, const config_t *config)
                     /* Pack tile block */
                     packet = iac_obc_packet(&block);
                     /* Transfer packets */
-                    IAC_VERBOSE("Transferring block...\n");
+                    IAC_VERBOSE("Transferring block %u...\n", (unsigned int) k);
                     if (iac_spi_transfer(fd,
                                          packet.buf,
                                          (uint32_t) packet.size) == IAC_FAILURE)
