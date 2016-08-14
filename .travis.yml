@@ -5,7 +5,7 @@ addons:
       - libusb-1.0-0
       - libraw1394-11
       - libmagickwand-dev
-      - libtiff5
+      - libtiff4
       - cmocka
 install:
   - mkdir -p $HOME/dl $HOME/.local/lib $HOME/.local/include/m3api
